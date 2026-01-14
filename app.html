@@ -56,8 +56,8 @@
   </header>
 
   <!-- Gallery -->
-  <main class="max-w-4xl mx-auto p-4">
-    <div id="pages-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+  <main class="max-w-5xl mx-auto px-6 pt-10 pb-6">
+    <div id="pages-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     <div id="empty-state" class="hidden text-center py-16">
       <p class="text-muted mb-3">Aucune page</p>
       <label class="bg-white text-black px-4 py-2 rounded-md text-sm font-medium cursor-pointer hover:bg-zinc-200">
@@ -221,18 +221,20 @@
     grid.classList.remove('hidden'); empty.classList.add('hidden');
 
     grid.innerHTML = galleryPages.map((page, i) => `
-      <div class="bg-card rounded-lg overflow-hidden group cursor-pointer" style="border: 1px solid var(--border);" onclick="openSettings(${i})">
-        <div class="h-24 bg-white relative">
+      <div class="bg-card rounded-xl overflow-hidden group cursor-pointer transition-transform hover:scale-[1.02]" style="border: 1px solid var(--border);" onclick="openSettings(${i})">
+        <div class="h-44 bg-white relative overflow-hidden">
           <iframe src="/${page.filename}" class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center">
-            <span class="opacity-0 group-hover:opacity-100 bg-white text-black px-2 py-1 rounded text-xs font-medium">Réglages</span>
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center">
+            <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-black px-4 py-2 rounded-lg text-sm font-medium shadow-lg">Réglages</span>
           </div>
         </div>
-        <div class="p-2">
-          <p class="text-xs font-medium truncate">${page.name}</p>
-          <div class="flex items-center justify-between mt-1">
-            <p class="text-muted text-[10px] truncate">${page.filename}</p>
-            ${page.isMain ? '<span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded">Main</span>' : ''}
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold truncate">${page.name}</p>
+              <p class="text-muted text-xs mt-1 truncate">${page.filename}</p>
+            </div>
+            ${page.isMain ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded-md font-medium shrink-0">Main</span>' : ''}
           </div>
         </div>
       </div>
