@@ -43,7 +43,7 @@ export default function handler() {
               color: 'rgba(255, 255, 255, 0.7)',
             }}
           >
-            Weekly Service Post Inclusion & Spotify Growth
+            Discovery Service - Offers
           </p>
         </div>
       </div>

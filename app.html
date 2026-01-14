@@ -197,6 +197,25 @@
       <p id="status">Les modifications seront en ligne ~10 secondes après sauvegarde</p>
     </section>
 
+    <!-- Gallery Section -->
+    <section class="mt-12 pt-8 border-t border-zinc-800">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-medium">Galerie de pages</h2>
+          <p class="text-zinc-500 text-sm">Ajoutez et gérez vos pages HTML</p>
+        </div>
+        <label class="bg-white text-black px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition">
+          + Ajouter HTML
+          <input type="file" id="gallery-file-input" accept=".html,.htm" class="hidden">
+        </label>
+      </div>
+
+      <!-- Pages Grid -->
+      <div id="pages-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Pages will be inserted here -->
+      </div>
+    </section>
+
   </main>
 
   <!-- Toast -->
@@ -393,8 +412,133 @@
       }
     }
 
+    // ========== GALLERY ==========
+    const GALLERY_STORAGE_KEY = 'discovery-gallery-pages';
+    let galleryPages = JSON.parse(localStorage.getItem(GALLERY_STORAGE_KEY) || '[]');
+
+    // Initialize with index.html if empty
+    if (galleryPages.length === 0) {
+      galleryPages = [
+        { name: 'Discovery Service', filename: 'index.html', isMain: true }
+      ];
+      localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
+    }
+
+    function renderGallery() {
+      const grid = document.getElementById('pages-grid');
+
+      grid.innerHTML = galleryPages.map((page, index) => `
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden group">
+          <div class="h-32 bg-white relative">
+            <iframe src="/${page.filename}"
+                    class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
+          </div>
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <p class="font-medium truncate">${page.name}</p>
+                <p class="text-zinc-500 text-xs">${page.filename}</p>
+              </div>
+              ${page.isMain ? '<span class="text-xs bg-blue-600 px-2 py-1 rounded">Principal</span>' : ''}
+            </div>
+            <div class="flex gap-2">
+              <button onclick="copyPageLink('${page.filename}')"
+                      class="flex-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
+                Copier le lien
+              </button>
+              <a href="/${page.filename}" target="_blank"
+                 class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+              </a>
+              ${!page.isMain ? `
+              <button onclick="deletePage(${index})"
+                      class="px-3 py-2 bg-zinc-800 hover:bg-red-600 rounded-lg text-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function copyPageLink(filename) {
+      const url = `${PUBLIC_URL}/${filename === 'index.html' ? '' : filename}`;
+      navigator.clipboard.writeText(url);
+      showToast('Lien copié !');
+    }
+
+    async function uploadPage(file) {
+      const filename = file.name.toLowerCase().replace(/\s+/g, '-');
+      const reader = new FileReader();
+
+      reader.onload = async (e) => {
+        const content = e.target.result;
+        showToast('Upload en cours...', 'loading');
+
+        try {
+          const res = await fetch('/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content: content,
+              filename: filename,
+              message: `Add page: ${filename}`
+            })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            // Add to gallery
+            galleryPages.push({
+              name: file.name.replace('.html', '').replace('.htm', ''),
+              filename: filename,
+              isMain: false
+            });
+            localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
+            renderGallery();
+            showToast('Page ajoutée ! En ligne dans ~10s', 'success');
+          } else {
+            throw new Error(data.error);
+          }
+        } catch (e) {
+          showToast('Erreur: ' + e.message, 'error');
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    async function deletePage(index) {
+      const page = galleryPages[index];
+      if (page.isMain) return;
+
+      if (!confirm(`Supprimer "${page.name}" ?`)) return;
+
+      // Note: On ne supprime pas le fichier sur GitHub, juste de la galerie locale
+      // Pour une vraie suppression, il faudrait une API delete
+      galleryPages.splice(index, 1);
+      localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
+      renderGallery();
+      showToast('Page retirée de la galerie');
+    }
+
+    // File input handler
+    document.getElementById('gallery-file-input').addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        uploadPage(e.target.files[0]);
+        e.target.value = '';
+      }
+    });
+
     // Init
     loadCurrentHtml();
+    renderGallery();
   </script>
 </body>
 </html>
