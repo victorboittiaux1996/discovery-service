@@ -3,266 +3,344 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preview Manager</title>
+  <title>Discovery Service - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     .toast {
       position: fixed; bottom: 24px; right: 24px;
-      background: #10b981; color: white; padding: 12px 20px;
-      border-radius: 8px; font-weight: 500; opacity: 0;
-      transform: translateY(10px); transition: all 0.3s;
+      padding: 12px 20px; border-radius: 8px; font-weight: 500;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: #10b981; color: white; }
+    .toast.error { background: #ef4444; color: white; }
+    .toast.loading { background: #3b82f6; color: white; }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
   </style>
 </head>
 <body class="min-h-screen bg-zinc-950 text-white">
 
   <!-- Header -->
   <header class="border-b border-zinc-800 px-6 py-4">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-semibold">Preview Manager</h1>
-        <p class="text-zinc-500 text-sm">Gérez et partagez vos previews HTML</p>
+        <h1 class="text-xl font-semibold">Discovery Service</h1>
+        <p class="text-zinc-500 text-sm">Admin - Gestion des prix</p>
       </div>
-      <label class="bg-white text-black px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition">
-        + Ajouter HTML
-        <input type="file" id="file-input" accept=".html,.htm" multiple class="hidden">
-      </label>
+      <div class="flex items-center gap-3">
+        <a href="/" target="_blank" class="text-zinc-400 hover:text-white text-sm transition">
+          Voir le site →
+        </a>
+        <button onclick="copyLink()" class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-sm transition">
+          Copier le lien
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- Main -->
-  <main class="max-w-6xl mx-auto p-6">
+  <main class="max-w-4xl mx-auto p-6">
 
-    <!-- Active Links Section -->
-    <section class="mb-10">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-medium flex items-center gap-2">
-          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          Liens Actifs
-        </h2>
-        <button onclick="refreshLinks()" class="text-zinc-500 hover:text-white text-sm transition">
-          Rafraîchir
-        </button>
-      </div>
-      <div id="active-links" class="grid gap-3">
-        <div class="text-zinc-600 text-sm py-8 text-center border border-dashed border-zinc-800 rounded-xl">
-          Aucun lien actif. Ajoutez des fichiers HTML pour commencer.
+    <!-- Link Section -->
+    <section class="mb-8 p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-zinc-500 text-sm mb-1">Lien public à partager</p>
+          <p class="text-lg font-medium" id="public-link">https://discovery-service.vercel.app</p>
         </div>
+        <button onclick="copyLink()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium transition">
+          Copier
+        </button>
       </div>
     </section>
 
-    <!-- All Previews -->
-    <section>
-      <h2 class="text-lg font-medium mb-4">Toutes les Previews</h2>
-      <div id="previews-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Cards will be inserted here -->
+    <!-- Pricing Editor -->
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-medium">Modifier les prix</h2>
+        <button onclick="savePrices()" id="save-btn"
+                class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-lg font-medium transition flex items-center gap-2">
+          <span>Sauvegarder</span>
+        </button>
       </div>
+
+      <!-- Offer 01: Weekly Service -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <h3 class="text-zinc-400 text-sm uppercase tracking-wider mb-4">Offer 01 — Weekly Service Post Inclusion</h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div>
+              <p class="font-medium">1st Slide Position</p>
+              <p class="text-zinc-500 text-sm">Elite Spot</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-1st" value="90"
+                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div>
+              <p class="font-medium">2nd Slide Position</p>
+              <p class="text-zinc-500 text-sm">Prime Spot</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-2nd" value="75"
+                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div>
+              <p class="font-medium">3rd Slide Position</p>
+              <p class="text-zinc-500 text-sm">Select Spot</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-3rd" value="60"
+                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div>
+              <p class="font-medium">4th+ Slide Position</p>
+              <p class="text-zinc-500 text-sm">Standard Spot</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-4th" value="50"
+                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg md:col-span-2">
+            <div>
+              <p class="font-medium">Specific Post</p>
+              <p class="text-zinc-500 text-sm">Full Feature - Dedicated post</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-specific" value="150"
+                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offer 02: Spotify -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <h3 class="text-zinc-400 text-sm uppercase tracking-wider mb-4">Offer 02 — Spotify Growth Packages</h3>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="flex flex-col justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div class="mb-3">
+              <p class="font-medium">10-20k Streams</p>
+              <p class="text-zinc-500 text-sm">Starter - Initial Momentum</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-spotify-starter" value="590"
+                     class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="flex flex-col justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div class="mb-3">
+              <p class="font-medium">25-45k Streams</p>
+              <p class="text-zinc-500 text-sm">Growth - Algorithm Trigger</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-spotify-growth" value="990"
+                     class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="flex flex-col justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div class="mb-3">
+              <p class="font-medium">45k+ Streams</p>
+              <p class="text-zinc-500 text-sm">Platinum - Full Velocity</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-zinc-500">€</span>
+              <input type="number" id="price-spotify-platinum" value="1590"
+                     class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Status -->
+    <section class="mt-8 text-center text-zinc-600 text-sm">
+      <p id="status">Les modifications seront en ligne ~10 secondes après sauvegarde</p>
     </section>
 
   </main>
 
   <!-- Toast -->
-  <div id="toast" class="toast">Lien copié !</div>
+  <div id="toast" class="toast"></div>
 
   <script>
-    const STORAGE_KEY = 'preview-manager-items';
-    const BASE_URL = window.location.origin + window.location.pathname.replace('app.html', '');
+    const PUBLIC_URL = 'https://discovery-service.vercel.app';
 
-    let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    // Price mapping to HTML content
+    const priceMap = {
+      'price-1st': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€90<\/span>/, label: '€90' },
+      'price-2nd': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€75<\/span>/, label: '€75' },
+      'price-3rd': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€60<\/span>/, label: '€60' },
+      'price-4th': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€50<\/span>/, label: '€50' },
+      'price-specific': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€150<\/span>/, label: '€150' },
+      'price-spotify-starter': { search: /<span class="text-5xl font-semibold tracking-tighter leading-none">€590<\/span>/, label: '€590' },
+      'price-spotify-growth': { search: /<span class="text-5xl font-semibold tracking-tighter leading-none">€990<\/span>/, label: '€990' },
+      'price-spotify-platinum': { search: /<span class="text-5xl font-semibold tracking-tighter leading-none">€1,590<\/span>/, label: '€1,590' },
+    };
 
-    // Initialize with index.html if exists and not in storage
-    if (items.length === 0) {
-      items.push({
-        id: 'discovery-service',
-        name: 'Discovery Service',
-        filename: 'index.html',
-        date: new Date().toISOString(),
-        active: true
+    let originalHtml = '';
+
+    // Load current HTML on page load
+    async function loadCurrentHtml() {
+      try {
+        const res = await fetch('/index.html');
+        originalHtml = await res.text();
+
+        // Extract current prices and update inputs
+        extractPrices(originalHtml);
+      } catch (e) {
+        console.error('Failed to load HTML:', e);
+      }
+    }
+
+    function extractPrices(html) {
+      // Extract prices using regex
+      const patterns = [
+        { id: 'price-1st', regex: /Elite Spot[\s\S]*?€(\d+)/ },
+        { id: 'price-2nd', regex: /Prime Spot[\s\S]*?€(\d+)/ },
+        { id: 'price-3rd', regex: /Select Spot[\s\S]*?€(\d+)/ },
+        { id: 'price-4th', regex: /Standard Spot[\s\S]*?€(\d+)/ },
+        { id: 'price-specific', regex: /Full Feature[\s\S]*?€(\d+)/ },
+        { id: 'price-spotify-starter', regex: /INITIAL[\s\S]*?MOMENTUM[\s\S]*?€([\d,]+)/ },
+        { id: 'price-spotify-growth', regex: /ALGORITHM[\s\S]*?TRIGGER[\s\S]*?€([\d,]+)/ },
+        { id: 'price-spotify-platinum', regex: /FULL[\s\S]*?VELOCITY[\s\S]*?€([\d,]+)/ },
+      ];
+
+      patterns.forEach(({ id, regex }) => {
+        const match = html.match(regex);
+        if (match) {
+          const value = match[1].replace(',', '');
+          document.getElementById(id).value = value;
+        }
       });
-      saveItems();
     }
 
-    function saveItems() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    function formatPrice(value) {
+      const num = parseInt(value);
+      if (num >= 1000) {
+        return num.toLocaleString('en-US').replace(',', ',');
+      }
+      return num.toString();
     }
 
-    function showToast(message = 'Lien copié !') {
+    function showToast(message, type = 'success') {
       const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => showToast());
+    function copyLink() {
+      navigator.clipboard.writeText(PUBLIC_URL);
+      showToast('Lien copié !');
     }
 
-    function getPreviewUrl(filename) {
-      return BASE_URL + filename;
-    }
+    async function savePrices() {
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Sauvegarde...</span>';
+      showToast('Mise à jour en cours...', 'loading');
 
-    function toggleActive(id) {
-      const item = items.find(i => i.id === id);
-      if (item) {
-        item.active = !item.active;
-        saveItems();
-        render();
-      }
-    }
-
-    function deleteItem(id) {
-      if (confirm('Supprimer cette preview ?')) {
-        items = items.filter(i => i.id !== id);
-        saveItems();
-        render();
-      }
-    }
-
-    function refreshLinks() {
-      showToast('Liens rafraîchis !');
-      render();
-    }
-
-    function formatDate(dateStr) {
-      return new Date(dateStr).toLocaleDateString('fr-FR', {
-        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-      });
-    }
-
-    function render() {
-      const activeLinks = document.getElementById('active-links');
-      const previewsGrid = document.getElementById('previews-grid');
-
-      const activeItems = items.filter(i => i.active);
-
-      // Render active links
-      if (activeItems.length === 0) {
-        activeLinks.innerHTML = `
-          <div class="text-zinc-600 text-sm py-8 text-center border border-dashed border-zinc-800 rounded-xl">
-            Aucun lien actif. Activez des previews ci-dessous.
-          </div>
-        `;
-      } else {
-        activeLinks.innerHTML = activeItems.map(item => `
-          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <h3 class="font-medium truncate">${item.name}</h3>
-              <p class="text-zinc-500 text-sm truncate">${getPreviewUrl(item.filename)}</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <a href="${getPreviewUrl(item.filename)}" target="_blank"
-                 class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
-                Ouvrir
-              </a>
-              <button onclick="copyToClipboard('${getPreviewUrl(item.filename)}')"
-                      class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition">
-                Copier
-              </button>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      // Render all previews
-      if (items.length === 0) {
-        previewsGrid.innerHTML = `
-          <div class="col-span-full text-zinc-600 text-sm py-12 text-center border border-dashed border-zinc-800 rounded-xl">
-            Aucune preview. Glissez des fichiers HTML ou cliquez sur "Ajouter HTML".
-          </div>
-        `;
-      } else {
-        previewsGrid.innerHTML = items.map(item => `
-          <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden group">
-            <div class="h-40 bg-white relative">
-              <iframe src="${getPreviewUrl(item.filename)}"
-                      class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
-              <a href="${getPreviewUrl(item.filename)}" target="_blank"
-                 class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                <span class="bg-white text-black px-4 py-2 rounded-lg font-medium">Ouvrir</span>
-              </a>
-            </div>
-            <div class="p-4">
-              <div class="flex items-start justify-between gap-2 mb-3">
-                <div class="min-w-0">
-                  <h3 class="font-medium truncate">${item.name}</h3>
-                  <p class="text-zinc-500 text-xs">${formatDate(item.date)}</p>
-                </div>
-                <button onclick="toggleActive('${item.id}')"
-                        class="shrink-0 w-10 h-6 rounded-full transition ${item.active ? 'bg-green-600' : 'bg-zinc-700'}">
-                  <span class="block w-4 h-4 bg-white rounded-full transition transform ${item.active ? 'translate-x-5' : 'translate-x-1'}"></span>
-                </button>
-              </div>
-              <div class="flex gap-2">
-                <button onclick="copyToClipboard('${getPreviewUrl(item.filename)}')"
-                        class="flex-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
-                  Copier le lien
-                </button>
-                <button onclick="deleteItem('${item.id}')"
-                        class="px-3 py-2 bg-zinc-800 hover:bg-red-600 rounded-lg text-sm transition">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      }
-    }
-
-    // File upload handler
-    document.getElementById('file-input').addEventListener('change', (e) => {
-      Array.from(e.target.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const id = 'preview-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-          const filename = file.name.replace(/\s+/g, '-').toLowerCase();
-
-          // Store in localStorage with content (for GitHub Pages we'd need actual file upload)
-          items.unshift({
-            id,
-            name: file.name.replace('.html', '').replace('.htm', ''),
-            filename: filename,
-            content: event.target.result,
-            date: new Date().toISOString(),
-            active: true
-          });
-          saveItems();
-          render();
-          showToast('Preview ajoutée !');
+      try {
+        // Get new prices
+        const prices = {
+          '1st': document.getElementById('price-1st').value,
+          '2nd': document.getElementById('price-2nd').value,
+          '3rd': document.getElementById('price-3rd').value,
+          '4th': document.getElementById('price-4th').value,
+          'specific': document.getElementById('price-specific').value,
+          'spotify-starter': document.getElementById('price-spotify-starter').value,
+          'spotify-growth': document.getElementById('price-spotify-growth').value,
+          'spotify-platinum': document.getElementById('price-spotify-platinum').value,
         };
-        reader.readAsText(file);
-      });
-      e.target.value = '';
-    });
 
-    // Drag and drop
-    document.body.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      document.body.classList.add('bg-zinc-900');
-    });
+        // Update HTML with new prices
+        let newHtml = originalHtml;
 
-    document.body.addEventListener('dragleave', () => {
-      document.body.classList.remove('bg-zinc-900');
-    });
+        // Offer 01 prices (text-4xl)
+        newHtml = newHtml.replace(
+          /(Elite Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
+          `$1€${prices['1st']}$2`
+        );
+        newHtml = newHtml.replace(
+          /(Prime Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
+          `$1€${prices['2nd']}$2`
+        );
+        newHtml = newHtml.replace(
+          /(Select Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
+          `$1€${prices['3rd']}$2`
+        );
+        newHtml = newHtml.replace(
+          /(Standard Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
+          `$1€${prices['4th']}$2`
+        );
+        newHtml = newHtml.replace(
+          /(Full Feature[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
+          `$1€${prices['specific']}$2`
+        );
 
-    document.body.addEventListener('drop', (e) => {
-      e.preventDefault();
-      document.body.classList.remove('bg-zinc-900');
-      const files = Array.from(e.dataTransfer.files).filter(f =>
-        f.type === 'text/html' || f.name.endsWith('.html') || f.name.endsWith('.htm')
-      );
-      if (files.length) {
-        document.getElementById('file-input').files = e.dataTransfer.files;
-        document.getElementById('file-input').dispatchEvent(new Event('change'));
+        // Offer 02 prices (text-5xl) - with comma formatting for 1000+
+        newHtml = newHtml.replace(
+          /(INITIAL[\s\S]*?MOMENTUM[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+([\s\S]*?<\/span>)/,
+          `$1€${formatPrice(prices['spotify-starter'])}$2`
+        );
+        newHtml = newHtml.replace(
+          /(ALGORITHM[\s\S]*?TRIGGER[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+([\s\S]*?<\/span>)/,
+          `$1€${formatPrice(prices['spotify-growth'])}$2`
+        );
+        newHtml = newHtml.replace(
+          /(FULL[\s\S]*?VELOCITY[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+([\s\S]*?<\/span>)/,
+          `$1€${formatPrice(prices['spotify-platinum'])}$2`
+        );
+
+        // Send to API
+        const res = await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: newHtml,
+            filename: 'index.html',
+            message: `Update prices: 1st=${prices['1st']}, 2nd=${prices['2nd']}, 3rd=${prices['3rd']}, 4th=${prices['4th']}, specific=${prices['specific']}, spotify=${prices['spotify-starter']}/${prices['spotify-growth']}/${prices['spotify-platinum']}`
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          originalHtml = newHtml;
+          showToast('Prix mis à jour ! En ligne dans ~10s', 'success');
+          document.getElementById('status').textContent = 'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
+        } else {
+          throw new Error(data.error || 'Update failed');
+        }
+      } catch (e) {
+        showToast('Erreur: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Sauvegarder</span>';
       }
-    });
+    }
 
     // Init
-    render();
+    loadCurrentHtml();
   </script>
 </body>
 </html>
