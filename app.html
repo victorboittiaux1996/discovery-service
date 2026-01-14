@@ -5,237 +5,202 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Discovery Service - Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      padding: 12px 20px; border-radius: 8px; font-weight: 500;
-      opacity: 0; transform: translateY(10px); transition: all 0.3s;
-      z-index: 1000;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; }
+    .toast { position: fixed; bottom: 16px; right: 16px; padding: 10px 16px; border-radius: 6px; font-weight: 500; font-size: 13px; opacity: 0; transform: translateY(10px); transition: all 0.3s; z-index: 1000; }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.success { background: #10b981; color: white; }
     .toast.error { background: #ef4444; color: white; }
     .toast.loading { background: #3b82f6; color: white; }
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
-
-    /* Light mode */
-    .light { --bg: #ffffff; --bg-secondary: #f4f4f5; --bg-tertiary: #e4e4e7; --text: #18181b; --text-secondary: #71717a; --border: #e4e4e7; }
-    .light body, .light .bg-main { background: var(--bg); color: var(--text); }
-    .light .bg-card { background: var(--bg-secondary); border-color: var(--border); }
-    .light .bg-input { background: var(--bg-tertiary); border-color: var(--border); color: var(--text); }
-    .light .text-muted { color: var(--text-secondary); }
-
-    /* Dark mode (default) */
+    .light { --bg: #fff; --bg-secondary: #f4f4f5; --bg-tertiary: #e4e4e7; --text: #18181b; --text-secondary: #71717a; --border: #e4e4e7; }
     .dark { --bg: #09090b; --bg-secondary: #18181b; --bg-tertiary: #27272a; --text: #fafafa; --text-secondary: #a1a1aa; --border: #27272a; }
-    .dark body, .dark .bg-main { background: var(--bg); color: var(--text); }
-    .dark .bg-card { background: var(--bg-secondary); border-color: var(--border); }
-    .dark .bg-input { background: var(--bg-tertiary); border-color: var(--border); color: var(--text); }
+    .light.bg-main, .light .bg-main { background: var(--bg); color: var(--text); }
+    .light .bg-card { background: var(--bg-secondary); }
+    .light .bg-input { background: var(--bg-tertiary); color: var(--text); }
+    .light .text-muted { color: var(--text-secondary); }
+    .dark.bg-main, .dark .bg-main { background: var(--bg); color: var(--text); }
+    .dark .bg-card { background: var(--bg-secondary); }
+    .dark .bg-input { background: var(--bg-tertiary); color: var(--text); }
     .dark .text-muted { color: var(--text-secondary); }
-
-    /* Modal */
     .modal { display: none; position: fixed; inset: 0; z-index: 100; }
-    .modal.active { display: flex; }
-    .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
-    .modal-content { position: relative; margin: auto; width: 100%; max-width: 42rem; max-height: 90vh; overflow-y: auto; }
+    .modal.active { display: flex; align-items: center; justify-content: center; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+    .modal-content { position: relative; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; }
+    input, select { font-size: 13px; }
   </style>
 </head>
-<body class="min-h-screen bg-main">
-<div id="app" class="dark">
+<body id="app" class="dark min-h-screen bg-main">
+<div>
 
   <!-- Header -->
-  <header class="border-b bg-card px-6 py-4" style="border-color: var(--border);">
-    <div class="max-w-5xl mx-auto flex items-center justify-between">
+  <header class="border-b px-4 py-3" style="border-color: var(--border); background: var(--bg-secondary);">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
       <div>
-        <h1 class="text-xl font-semibold">Discovery Service</h1>
-        <p class="text-muted text-sm">Gestion des pages</p>
+        <h1 class="text-base font-semibold">Discovery Service</h1>
+        <p class="text-muted text-xs">Gestion des pages</p>
       </div>
-      <div class="flex items-center gap-3">
-        <!-- Theme Toggle -->
-        <button onclick="toggleTheme()" id="theme-toggle" class="p-2 rounded-lg bg-card hover:opacity-80 transition" style="border: 1px solid var(--border);">
-          <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-          </svg>
-          <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-          </svg>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleTheme()" class="p-1.5 rounded-md hover:opacity-80 transition" style="border: 1px solid var(--border);">
+          <svg id="icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
         </button>
-        <label class="bg-white text-black px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition text-sm">
-          + Ajouter HTML
+        <label class="bg-white text-black px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer hover:bg-zinc-200 transition">
+          + Ajouter
           <input type="file" id="gallery-file-input" accept=".html,.htm" class="hidden">
         </label>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-5xl mx-auto p-6">
-
-    <!-- Gallery Grid -->
-    <div id="pages-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <!-- Pages will be inserted here -->
-    </div>
-
-    <div id="empty-state" class="hidden text-center py-20">
-      <p class="text-muted text-lg mb-4">Aucune page</p>
-      <label class="bg-white text-black px-6 py-3 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition">
-        + Ajouter une page HTML
+  <!-- Gallery -->
+  <main class="max-w-4xl mx-auto p-4">
+    <div id="pages-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+    <div id="empty-state" class="hidden text-center py-16">
+      <p class="text-muted mb-3">Aucune page</p>
+      <label class="bg-white text-black px-4 py-2 rounded-md text-sm font-medium cursor-pointer hover:bg-zinc-200">
+        + Ajouter HTML
         <input type="file" accept=".html,.htm" class="hidden" onchange="uploadPageFromEmpty(this)">
       </label>
     </div>
-
   </main>
 
   <!-- Settings Modal -->
   <div id="settings-modal" class="modal">
     <div class="modal-backdrop" onclick="closeSettings()"></div>
-    <div class="modal-content bg-card rounded-2xl p-6 m-4" style="border: 1px solid var(--border);">
-      <div class="flex items-center justify-between mb-6">
+    <div class="modal-content bg-card rounded-xl p-4 m-4" style="border: 1px solid var(--border);">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-4">
         <div>
-          <h2 class="text-xl font-semibold" id="settings-title">Réglages</h2>
-          <p class="text-muted text-sm" id="settings-filename"></p>
+          <h2 class="text-base font-semibold" id="settings-title">Réglages</h2>
+          <p class="text-muted text-xs" id="settings-filename"></p>
         </div>
-        <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-input transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+        <button onclick="closeSettings()" class="p-1 rounded hover:bg-input transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
-      <!-- Link Section -->
-      <section class="mb-6 p-4 bg-input rounded-xl">
-        <div class="flex items-center justify-between">
-          <div class="flex-1 mr-4">
-            <p class="text-muted text-sm mb-1">Lien public</p>
-            <p class="font-medium truncate" id="settings-link"></p>
-          </div>
-          <button onclick="copyCurrentLink()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition">
-            Copier
-          </button>
-        </div>
-      </section>
-
-      <!-- Font Selector (only for main page) -->
-      <section id="font-section" class="mb-6">
-        <h3 class="font-medium mb-3">Police du contenu</h3>
-        <p class="text-muted text-sm mb-4">Le titre "DISCOVERY SERVICE" garde toujours Outfit</p>
-        <div class="flex gap-3">
-          <button onclick="selectFont('outfit')" id="font-outfit"
-                  class="flex-1 p-4 bg-input rounded-xl transition border-2" style="border-color: var(--border);">
-            <p class="font-medium mb-1" style="font-family: 'Outfit', sans-serif;">Outfit</p>
-            <p class="text-muted text-sm" style="font-family: 'Outfit', sans-serif;">Aa Bb Cc 123</p>
-          </button>
-          <button onclick="selectFont('system')" id="font-system"
-                  class="flex-1 p-4 bg-input rounded-xl transition border-2" style="border-color: var(--border);">
-            <p class="font-medium mb-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">System</p>
-            <p class="text-muted text-sm" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Aa Bb Cc 123</p>
-          </button>
-        </div>
-      </section>
-
-      <!-- Pricing Editor (only for main page) -->
-      <section id="pricing-section" class="space-y-4">
-        <h3 class="font-medium">Modifier les prix</h3>
-
-        <!-- Offer 01 -->
-        <div class="bg-input rounded-xl p-4">
-          <p class="text-muted text-xs uppercase tracking-wider mb-3">Offer 01 — Weekly Service</p>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
-              <span class="text-sm">1st Slide</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-1st" value="90" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
-              <span class="text-sm">2nd Slide</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-2nd" value="75" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
-              <span class="text-sm">3rd Slide</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-3rd" value="60" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
-              <span class="text-sm">4th+ Slide</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-4th" value="50" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-card rounded-lg col-span-2">
-              <span class="text-sm">Specific Post</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-specific" value="150" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Offer 02 -->
-        <div class="bg-input rounded-xl p-4">
-          <p class="text-muted text-xs uppercase tracking-wider mb-3">Offer 02 — Spotify Growth</p>
-          <div class="grid grid-cols-3 gap-3">
-            <div class="flex flex-col p-3 bg-card rounded-lg">
-              <span class="text-sm mb-2">10-20k</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-spotify-starter" value="590" class="w-full bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-            <div class="flex flex-col p-3 bg-card rounded-lg">
-              <span class="text-sm mb-2">25-45k</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-spotify-growth" value="990" class="w-full bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-            <div class="flex flex-col p-3 bg-card rounded-lg">
-              <span class="text-sm mb-2">45k+</span>
-              <div class="flex items-center gap-1">
-                <span class="text-muted">€</span>
-                <input type="number" id="price-spotify-platinum" value="1590" class="w-full bg-input rounded px-2 py-1 text-right font-semibold">
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Save Button -->
-      <div class="mt-6 flex justify-end">
-        <button onclick="saveSettings()" id="save-btn"
-                class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-medium transition">
-          Sauvegarder
-        </button>
+      <!-- Link -->
+      <div class="flex items-center gap-2 mb-4 p-3 bg-input rounded-lg">
+        <p class="flex-1 text-xs truncate" id="settings-link"></p>
+        <button onclick="copyCurrentLink()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-medium">Copier</button>
       </div>
+
+      <!-- Preview Settings (main page only) -->
+      <div id="preview-section" class="mb-4 p-3 bg-input rounded-lg space-y-3">
+        <p class="text-xs font-medium text-muted uppercase tracking-wide">Preview du lien</p>
+        <div>
+          <label class="text-xs text-muted block mb-1">Titre</label>
+          <input type="text" id="og-title" class="w-full bg-card rounded px-2 py-1.5 text-sm" style="border: 1px solid var(--border);">
+        </div>
+        <div>
+          <label class="text-xs text-muted block mb-1">Description</label>
+          <input type="text" id="og-description" class="w-full bg-card rounded px-2 py-1.5 text-sm" style="border: 1px solid var(--border);">
+        </div>
+        <div>
+          <label class="text-xs text-muted block mb-1">Image</label>
+          <div class="flex gap-2 items-center">
+            <div id="og-image-preview" class="w-20 h-12 bg-card rounded flex items-center justify-center overflow-hidden" style="border: 1px solid var(--border);">
+              <span class="text-muted text-xs">Aucune</span>
+            </div>
+            <label class="bg-card px-3 py-1.5 rounded text-xs cursor-pointer hover:opacity-80" style="border: 1px solid var(--border);">
+              Choisir
+              <input type="file" id="og-image-input" accept="image/*" class="hidden" onchange="previewOgImage(this)">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Font (main page only) -->
+      <div id="font-section" class="mb-4 p-3 bg-input rounded-lg">
+        <p class="text-xs font-medium text-muted uppercase tracking-wide mb-2">Police</p>
+        <div class="flex gap-2">
+          <button onclick="selectFont('outfit')" id="font-outfit" class="flex-1 p-2 bg-card rounded text-xs border-2" style="border-color: var(--border);">
+            <span style="font-family: 'Outfit', sans-serif;">Outfit</span>
+          </button>
+          <button onclick="selectFont('system')" id="font-system" class="flex-1 p-2 bg-card rounded text-xs border-2" style="border-color: var(--border);">
+            <span style="font-family: system-ui;">System</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Prices (main page only) -->
+      <div id="pricing-section" class="mb-4 p-3 bg-input rounded-lg space-y-3">
+        <p class="text-xs font-medium text-muted uppercase tracking-wide">Prix</p>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">1st</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-1st" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">2nd</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-2nd" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">3rd</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-3rd" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">4th+</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-4th" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+          <div class="bg-card rounded p-2 col-span-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">Specific Post</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-specific" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+        </div>
+
+        <p class="text-xs text-muted mt-2">Spotify</p>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">10-20k</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-spotify-starter" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">25-45k</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-spotify-growth" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+          <div class="bg-card rounded p-2" style="border: 1px solid var(--border);">
+            <span class="text-xs text-muted block">45k+</span>
+            <div class="flex items-center"><span class="text-muted text-xs">€</span><input type="number" id="price-spotify-platinum" class="w-full bg-transparent text-right text-sm font-medium"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <button onclick="saveSettings()" id="save-btn" class="w-full bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg text-sm font-medium">
+        Sauvegarder
+      </button>
     </div>
   </div>
 
-</div>
-
-<!-- Toast -->
 <div id="toast" class="toast"></div>
 
 <script>
   const PUBLIC_URL = 'https://discovery-service.vercel.app';
-  const GALLERY_STORAGE_KEY = 'discovery-gallery-pages';
+  const GALLERY_KEY = 'discovery-gallery-pages';
   const THEME_KEY = 'discovery-theme';
 
-  // Theme
   let currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
+  let galleryPages = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
+  let currentEditPage = null;
+  let originalHtml = '';
+  let selectedFont = 'outfit';
+  let ogImageFile = null;
+
+  const FONTS = { outfit: '"Outfit", sans-serif', system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' };
+
+  // Init
+  if (galleryPages.length === 0) {
+    galleryPages = [{ name: 'Discovery Service', filename: 'index.html', isMain: true }];
+    localStorage.setItem(GALLERY_KEY, JSON.stringify(galleryPages));
+  }
   applyTheme(currentTheme);
+  renderGallery();
 
   function applyTheme(theme) {
     const app = document.getElementById('app');
@@ -247,95 +212,49 @@
     currentTheme = theme;
   }
 
-  function toggleTheme() {
-    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-  }
-
-  // Gallery
-  let galleryPages = JSON.parse(localStorage.getItem(GALLERY_STORAGE_KEY) || '[]');
-  let currentEditPage = null;
-  let originalHtml = '';
-
-  if (galleryPages.length === 0) {
-    galleryPages = [{ name: 'Discovery Service', filename: 'index.html', isMain: true }];
-    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
-  }
+  function toggleTheme() { applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); }
 
   function renderGallery() {
     const grid = document.getElementById('pages-grid');
     const empty = document.getElementById('empty-state');
+    if (galleryPages.length === 0) { grid.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+    grid.classList.remove('hidden'); empty.classList.add('hidden');
 
-    if (galleryPages.length === 0) {
-      grid.classList.add('hidden');
-      empty.classList.remove('hidden');
-      return;
-    }
-
-    grid.classList.remove('hidden');
-    empty.classList.add('hidden');
-
-    grid.innerHTML = galleryPages.map((page, index) => `
-      <div class="bg-card rounded-xl overflow-hidden group" style="border: 1px solid var(--border);">
-        <div class="h-40 bg-white relative cursor-pointer" onclick="openSettings(${index})">
+    grid.innerHTML = galleryPages.map((page, i) => `
+      <div class="bg-card rounded-lg overflow-hidden group cursor-pointer" style="border: 1px solid var(--border);" onclick="openSettings(${i})">
+        <div class="h-24 bg-white relative">
           <iframe src="/${page.filename}" class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
-            <span class="opacity-0 group-hover:opacity-100 bg-white text-black px-3 py-1.5 rounded-lg text-sm font-medium transition">
-              Réglages
-            </span>
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center">
+            <span class="opacity-0 group-hover:opacity-100 bg-white text-black px-2 py-1 rounded text-xs font-medium">Réglages</span>
           </div>
         </div>
-        <div class="p-4">
-          <div class="flex items-center justify-between mb-3">
-            <div class="min-w-0">
-              <p class="font-medium truncate">${page.name}</p>
-              <p class="text-muted text-xs truncate">${page.filename}</p>
-            </div>
-            ${page.isMain ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded shrink-0 ml-2">Principal</span>' : ''}
-          </div>
-          <div class="flex gap-2">
-            <button onclick="copyPageLink('${page.filename}')"
-                    class="flex-1 px-3 py-2 bg-input rounded-lg text-sm hover:opacity-80 transition">
-              Copier le lien
-            </button>
-            <a href="/${page.filename}" target="_blank"
-               class="px-3 py-2 bg-input rounded-lg text-sm hover:opacity-80 transition flex items-center">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-              </svg>
-            </a>
-            ${!page.isMain ? `
-            <button onclick="event.stopPropagation(); deletePage(${index})"
-                    class="px-3 py-2 bg-input hover:bg-red-600 hover:text-white rounded-lg text-sm transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>
-            ` : ''}
+        <div class="p-2">
+          <p class="text-xs font-medium truncate">${page.name}</p>
+          <div class="flex items-center justify-between mt-1">
+            <p class="text-muted text-[10px] truncate">${page.filename}</p>
+            ${page.isMain ? '<span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded">Main</span>' : ''}
           </div>
         </div>
       </div>
     `).join('');
   }
 
-  // Settings Modal
   async function openSettings(index) {
     currentEditPage = galleryPages[index];
-    const modal = document.getElementById('settings-modal');
     const isMain = currentEditPage.isMain;
+    ogImageFile = null;
 
     document.getElementById('settings-title').textContent = currentEditPage.name;
     document.getElementById('settings-filename').textContent = currentEditPage.filename;
     document.getElementById('settings-link').textContent = `${PUBLIC_URL}/${currentEditPage.filename === 'index.html' ? '' : currentEditPage.filename}`;
 
-    // Show/hide sections based on page type
+    document.getElementById('preview-section').style.display = isMain ? 'block' : 'none';
     document.getElementById('font-section').style.display = isMain ? 'block' : 'none';
     document.getElementById('pricing-section').style.display = isMain ? 'block' : 'none';
 
-    if (isMain) {
-      await loadMainPageData();
-    }
+    if (isMain) await loadMainPageData();
 
-    modal.classList.add('active');
+    document.getElementById('settings-modal').classList.add('active');
     document.body.style.overflow = 'hidden';
   }
 
@@ -343,20 +262,13 @@
     document.getElementById('settings-modal').classList.remove('active');
     document.body.style.overflow = '';
     currentEditPage = null;
+    ogImageFile = null;
   }
 
   function copyCurrentLink() {
-    const link = document.getElementById('settings-link').textContent;
-    navigator.clipboard.writeText(link);
+    navigator.clipboard.writeText(document.getElementById('settings-link').textContent);
     showToast('Lien copié !');
   }
-
-  // Font
-  const FONTS = {
-    outfit: '"Outfit", sans-serif',
-    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-  };
-  let selectedFont = 'outfit';
 
   function selectFont(font) {
     selectedFont = font;
@@ -364,10 +276,35 @@
     document.getElementById('font-system').style.borderColor = font === 'system' ? '#3b82f6' : 'var(--border)';
   }
 
+  function previewOgImage(input) {
+    if (input.files && input.files[0]) {
+      ogImageFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('og-image-preview').innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+      };
+      reader.readAsDataURL(ogImageFile);
+    }
+  }
+
   async function loadMainPageData() {
     try {
       const res = await fetch('/index.html');
       originalHtml = await res.text();
+
+      // Extract OG data
+      const titleMatch = originalHtml.match(/<meta property="og:title" content="([^"]+)"/);
+      const descMatch = originalHtml.match(/<meta property="og:description" content="([^"]+)"/);
+      const imgMatch = originalHtml.match(/<meta property="og:image" content="([^"]+)"/);
+
+      document.getElementById('og-title').value = titleMatch ? titleMatch[1] : 'Discovery Service';
+      document.getElementById('og-description').value = descMatch ? descMatch[1] : '';
+
+      if (imgMatch && !imgMatch[1].includes('/api/og')) {
+        document.getElementById('og-image-preview').innerHTML = `<img src="${imgMatch[1]}" class="w-full h-full object-cover">`;
+      } else {
+        document.getElementById('og-image-preview').innerHTML = `<span class="text-muted text-xs">Auto</span>`;
+      }
 
       // Extract prices
       const patterns = [
@@ -380,33 +317,47 @@
         { id: 'price-spotify-growth', regex: /ALGORITHM[\s\S]*?TRIGGER[\s\S]*?€([\d,]+)/ },
         { id: 'price-spotify-platinum', regex: /FULL[\s\S]*?VELOCITY[\s\S]*?€([\d,]+)/ },
       ];
-
       patterns.forEach(({ id, regex }) => {
         const match = originalHtml.match(regex);
-        if (match) {
-          document.getElementById(id).value = match[1].replace(',', '');
-        }
+        if (match) document.getElementById(id).value = match[1].replace(',', '');
       });
 
-      // Detect font
       selectedFont = originalHtml.includes('font-family: -apple-system') ? 'system' : 'outfit';
       selectFont(selectedFont);
-    } catch (e) {
-      console.error('Failed to load:', e);
-    }
+    } catch (e) { console.error(e); }
   }
 
   async function saveSettings() {
     if (!currentEditPage) return;
-
     const btn = document.getElementById('save-btn');
-    btn.disabled = true;
-    btn.textContent = 'Sauvegarde...';
-    showToast('Mise à jour en cours...', 'loading');
+    btn.disabled = true; btn.textContent = 'Sauvegarde...';
+    showToast('Mise à jour...', 'loading');
 
     try {
+      // Upload image first if selected
+      let ogImageUrl = null;
+      if (ogImageFile) {
+        const base64 = await fileToBase64(ogImageFile);
+        const imgFilename = 'og-image.' + ogImageFile.name.split('.').pop();
+
+        const imgRes = await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: base64,
+            filename: imgFilename,
+            message: 'Update OG image',
+            isBase64: true
+          })
+        });
+        if ((await imgRes.json()).success) {
+          ogImageUrl = `${PUBLIC_URL}/${imgFilename}`;
+        }
+      }
+
       if (currentEditPage.isMain) {
-        // Update prices and font
+        const ogTitle = document.getElementById('og-title').value;
+        const ogDesc = document.getElementById('og-description').value;
         const prices = {
           '1st': document.getElementById('price-1st').value,
           '2nd': document.getElementById('price-2nd').value,
@@ -420,140 +371,95 @@
 
         let newHtml = originalHtml;
 
+        // Update OG tags
+        newHtml = newHtml.replace(/<meta property="og:title" content="[^"]*"/, `<meta property="og:title" content="${ogTitle}"`);
+        newHtml = newHtml.replace(/<meta property="og:description" content="[^"]*"/, `<meta property="og:description" content="${ogDesc}"`);
+        newHtml = newHtml.replace(/<meta name="twitter:title" content="[^"]*"/, `<meta name="twitter:title" content="${ogTitle}"`);
+        newHtml = newHtml.replace(/<meta name="twitter:description" content="[^"]*"/, `<meta name="twitter:description" content="${ogDesc}"`);
+
+        if (ogImageUrl) {
+          newHtml = newHtml.replace(/<meta property="og:image" content="[^"]*"/, `<meta property="og:image" content="${ogImageUrl}"`);
+          newHtml = newHtml.replace(/<meta name="twitter:image" content="[^"]*"/, `<meta name="twitter:image" content="${ogImageUrl}"`);
+        }
+
         // Update font
         newHtml = newHtml.replace(/body\s*\{[\s\S]*?font-family:[^;]+;/, `body {\n        font-family: ${FONTS[selectedFont]};`);
 
         // Update prices
-        const priceReplacements = [
-          { pattern: /(Elite Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['1st'] },
-          { pattern: /(Prime Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['2nd'] },
-          { pattern: /(Select Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['3rd'] },
-          { pattern: /(Standard Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['4th'] },
-          { pattern: /(Full Feature[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['specific'] },
-          { pattern: /(INITIAL[\s\S]*?MOMENTUM[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, price: formatPrice(prices['spotify-starter']) },
-          { pattern: /(ALGORITHM[\s\S]*?TRIGGER[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, price: formatPrice(prices['spotify-growth']) },
-          { pattern: /(FULL[\s\S]*?VELOCITY[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, price: formatPrice(prices['spotify-platinum']) },
-        ];
-
-        priceReplacements.forEach(({ pattern, price }) => {
-          newHtml = newHtml.replace(pattern, `$1€${price}`);
-        });
+        [
+          [/(Elite Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, prices['1st']],
+          [/(Prime Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, prices['2nd']],
+          [/(Select Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, prices['3rd']],
+          [/(Standard Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, prices['4th']],
+          [/(Full Feature[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, prices['specific']],
+          [/(INITIAL[\s\S]*?MOMENTUM[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, formatPrice(prices['spotify-starter'])],
+          [/(ALGORITHM[\s\S]*?TRIGGER[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, formatPrice(prices['spotify-growth'])],
+          [/(FULL[\s\S]*?VELOCITY[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, formatPrice(prices['spotify-platinum'])],
+        ].forEach(([pattern, price]) => { newHtml = newHtml.replace(pattern, `$1€${price}`); });
 
         const res = await fetch('/api/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content: newHtml,
-            filename: 'index.html',
-            message: `Update settings`
-          })
+          body: JSON.stringify({ content: newHtml, filename: 'index.html', message: 'Update settings' })
         });
-
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-
+        if (!(await res.json()).success) throw new Error('Failed');
         originalHtml = newHtml;
       }
 
-      showToast('Sauvegardé ! En ligne dans ~10s', 'success');
+      showToast('Sauvegardé !', 'success');
       closeSettings();
       renderGallery();
     } catch (e) {
       showToast('Erreur: ' + e.message, 'error');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Sauvegarder';
+      btn.disabled = false; btn.textContent = 'Sauvegarder';
     }
   }
 
-  function formatPrice(value) {
-    const num = parseInt(value);
-    return num >= 1000 ? num.toLocaleString('en-US') : num.toString();
+  function fileToBase64(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
   }
 
-  // Gallery actions
+  function formatPrice(v) { const n = parseInt(v); return n >= 1000 ? n.toLocaleString('en-US') : n.toString(); }
+
   function copyPageLink(filename) {
-    const url = `${PUBLIC_URL}/${filename === 'index.html' ? '' : filename}`;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(`${PUBLIC_URL}/${filename === 'index.html' ? '' : filename}`);
     showToast('Lien copié !');
   }
 
   async function uploadPage(file) {
     const filename = file.name.toLowerCase().replace(/\s+/g, '-');
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-      showToast('Upload en cours...', 'loading');
-      try {
-        const res = await fetch('/api/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content: e.target.result,
-            filename: filename,
-            message: `Add page: ${filename}`
-          })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          galleryPages.push({
-            name: file.name.replace(/\.(html|htm)$/i, ''),
-            filename: filename,
-            isMain: false
-          });
-          localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
-          renderGallery();
-          showToast('Page ajoutée !', 'success');
-        } else {
-          throw new Error(data.error);
-        }
-      } catch (e) {
-        showToast('Erreur: ' + e.message, 'error');
+    const content = await file.text();
+    showToast('Upload...', 'loading');
+    try {
+      const res = await fetch('/api/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, filename, message: `Add: ${filename}` })
+      });
+      if ((await res.json()).success) {
+        galleryPages.push({ name: file.name.replace(/\.(html|htm)$/i, ''), filename, isMain: false });
+        localStorage.setItem(GALLERY_KEY, JSON.stringify(galleryPages));
+        renderGallery();
+        showToast('Ajouté !', 'success');
       }
-    };
-    reader.readAsText(file);
+    } catch (e) { showToast('Erreur', 'error'); }
   }
 
-  function uploadPageFromEmpty(input) {
-    if (input.files.length > 0) {
-      uploadPage(input.files[0]);
-      input.value = '';
-    }
+  function uploadPageFromEmpty(input) { if (input.files[0]) { uploadPage(input.files[0]); input.value = ''; } }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  function deletePage(index) {
-    if (galleryPages[index].isMain) return;
-    if (!confirm(`Supprimer "${galleryPages[index].name}" ?`)) return;
-
-    galleryPages.splice(index, 1);
-    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
-    renderGallery();
-    showToast('Page supprimée');
-  }
-
-  function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type} show`;
-    setTimeout(() => toast.classList.remove('show'), 3000);
-  }
-
-  // File input
-  document.getElementById('gallery-file-input').addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-      uploadPage(e.target.files[0]);
-      e.target.value = '';
-    }
-  });
-
-  // Close modal on Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeSettings();
-  });
-
-  // Init
-  renderGallery();
+  document.getElementById('gallery-file-input').addEventListener('change', (e) => { if (e.target.files[0]) { uploadPage(e.target.files[0]); e.target.value = ''; } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSettings(); });
 </script>
 </body>
 </html>
