@@ -14,6 +14,7 @@
       position: fixed; bottom: 24px; right: 24px;
       padding: 12px 20px; border-radius: 8px; font-weight: 500;
       opacity: 0; transform: translateY(10px); transition: all 0.3s;
+      z-index: 1000;
     }
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.success { background: #10b981; color: white; }
@@ -22,264 +23,353 @@
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+
+    /* Light mode */
+    .light { --bg: #ffffff; --bg-secondary: #f4f4f5; --bg-tertiary: #e4e4e7; --text: #18181b; --text-secondary: #71717a; --border: #e4e4e7; }
+    .light body, .light .bg-main { background: var(--bg); color: var(--text); }
+    .light .bg-card { background: var(--bg-secondary); border-color: var(--border); }
+    .light .bg-input { background: var(--bg-tertiary); border-color: var(--border); color: var(--text); }
+    .light .text-muted { color: var(--text-secondary); }
+
+    /* Dark mode (default) */
+    .dark { --bg: #09090b; --bg-secondary: #18181b; --bg-tertiary: #27272a; --text: #fafafa; --text-secondary: #a1a1aa; --border: #27272a; }
+    .dark body, .dark .bg-main { background: var(--bg); color: var(--text); }
+    .dark .bg-card { background: var(--bg-secondary); border-color: var(--border); }
+    .dark .bg-input { background: var(--bg-tertiary); border-color: var(--border); color: var(--text); }
+    .dark .text-muted { color: var(--text-secondary); }
+
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; z-index: 100; }
+    .modal.active { display: flex; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
+    .modal-content { position: relative; margin: auto; width: 100%; max-width: 42rem; max-height: 90vh; overflow-y: auto; }
   </style>
 </head>
-<body class="min-h-screen bg-zinc-950 text-white">
+<body class="min-h-screen bg-main">
+<div id="app" class="dark">
 
   <!-- Header -->
-  <header class="border-b border-zinc-800 px-6 py-4">
-    <div class="max-w-4xl mx-auto flex items-center justify-between">
+  <header class="border-b bg-card px-6 py-4" style="border-color: var(--border);">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
       <div>
         <h1 class="text-xl font-semibold">Discovery Service</h1>
-        <p class="text-zinc-500 text-sm">Admin - Gestion des prix</p>
+        <p class="text-muted text-sm">Gestion des pages</p>
       </div>
       <div class="flex items-center gap-3">
-        <a href="/" target="_blank" class="text-zinc-400 hover:text-white text-sm transition">
-          Voir le site →
-        </a>
-        <button onclick="copyLink()" class="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-sm transition">
-          Copier le lien
+        <!-- Theme Toggle -->
+        <button onclick="toggleTheme()" id="theme-toggle" class="p-2 rounded-lg bg-card hover:opacity-80 transition" style="border: 1px solid var(--border);">
+          <svg id="icon-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg id="icon-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
         </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <main class="max-w-4xl mx-auto p-6">
-
-    <!-- Link Section -->
-    <section class="mb-8 p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-zinc-500 text-sm mb-1">Lien public à partager</p>
-          <p class="text-lg font-medium" id="public-link">https://discovery-service.vercel.app</p>
-        </div>
-        <button onclick="copyLink()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium transition">
-          Copier
-        </button>
-      </div>
-    </section>
-
-    <!-- Font Selector -->
-    <section class="mb-8">
-      <h2 class="text-lg font-medium mb-4">Police du contenu</h2>
-      <p class="text-zinc-500 text-sm mb-4">Le titre "DISCOVERY SERVICE" garde toujours Outfit</p>
-      <div class="flex gap-3">
-        <button onclick="selectFont('outfit')" id="font-outfit"
-                class="flex-1 p-4 bg-zinc-900 border-2 border-blue-500 rounded-xl transition hover:border-blue-400">
-          <p class="font-medium mb-1" style="font-family: 'Outfit', sans-serif;">Outfit</p>
-          <p class="text-zinc-500 text-sm" style="font-family: 'Outfit', sans-serif;">Aa Bb Cc 123</p>
-        </button>
-        <button onclick="selectFont('system')" id="font-system"
-                class="flex-1 p-4 bg-zinc-900 border-2 border-zinc-700 rounded-xl transition hover:border-zinc-500">
-          <p class="font-medium mb-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">System</p>
-          <p class="text-zinc-500 text-sm" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Aa Bb Cc 123</p>
-        </button>
-      </div>
-    </section>
-
-    <!-- Pricing Editor -->
-    <section class="space-y-6">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-medium">Modifier les prix</h2>
-        <button onclick="savePrices()" id="save-btn"
-                class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-lg font-medium transition flex items-center gap-2">
-          <span>Sauvegarder</span>
-        </button>
-      </div>
-
-      <!-- Offer 01: Weekly Service -->
-      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-        <h3 class="text-zinc-400 text-sm uppercase tracking-wider mb-4">Offer 01 — Weekly Service Post Inclusion</h3>
-        <div class="grid md:grid-cols-2 gap-4">
-          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div>
-              <p class="font-medium">1st Slide Position</p>
-              <p class="text-zinc-500 text-sm">Elite Spot</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-1st" value="90"
-                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div>
-              <p class="font-medium">2nd Slide Position</p>
-              <p class="text-zinc-500 text-sm">Prime Spot</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-2nd" value="75"
-                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div>
-              <p class="font-medium">3rd Slide Position</p>
-              <p class="text-zinc-500 text-sm">Select Spot</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-3rd" value="60"
-                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div>
-              <p class="font-medium">4th+ Slide Position</p>
-              <p class="text-zinc-500 text-sm">Standard Spot</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-4th" value="50"
-                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg md:col-span-2">
-            <div>
-              <p class="font-medium">Specific Post</p>
-              <p class="text-zinc-500 text-sm">Full Feature - Dedicated post</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-specific" value="150"
-                     class="w-20 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Offer 02: Spotify -->
-      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-        <h3 class="text-zinc-400 text-sm uppercase tracking-wider mb-4">Offer 02 — Spotify Growth Packages</h3>
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="flex flex-col justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div class="mb-3">
-              <p class="font-medium">10-20k Streams</p>
-              <p class="text-zinc-500 text-sm">Starter - Initial Momentum</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-spotify-starter" value="590"
-                     class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex flex-col justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div class="mb-3">
-              <p class="font-medium">25-45k Streams</p>
-              <p class="text-zinc-500 text-sm">Growth - Algorithm Trigger</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-spotify-growth" value="990"
-                     class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="flex flex-col justify-between p-4 bg-zinc-800/50 rounded-lg">
-            <div class="mb-3">
-              <p class="font-medium">45k+ Streams</p>
-              <p class="text-zinc-500 text-sm">Platinum - Full Velocity</p>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-zinc-500">€</span>
-              <input type="number" id="price-spotify-platinum" value="1590"
-                     class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-right text-lg font-semibold focus:border-blue-500 focus:outline-none">
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Status -->
-    <section class="mt-8 text-center text-zinc-600 text-sm">
-      <p id="status">Les modifications seront en ligne ~10 secondes après sauvegarde</p>
-    </section>
-
-    <!-- Gallery Section -->
-    <section class="mt-12 pt-8 border-t border-zinc-800">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-lg font-medium">Galerie de pages</h2>
-          <p class="text-zinc-500 text-sm">Ajoutez et gérez vos pages HTML</p>
-        </div>
-        <label class="bg-white text-black px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition">
+        <label class="bg-white text-black px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition text-sm">
           + Ajouter HTML
           <input type="file" id="gallery-file-input" accept=".html,.htm" class="hidden">
         </label>
       </div>
+    </div>
+  </header>
 
-      <!-- Pages Grid -->
-      <div id="pages-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Pages will be inserted here -->
-      </div>
-    </section>
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto p-6">
+
+    <!-- Gallery Grid -->
+    <div id="pages-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Pages will be inserted here -->
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-20">
+      <p class="text-muted text-lg mb-4">Aucune page</p>
+      <label class="bg-white text-black px-6 py-3 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition">
+        + Ajouter une page HTML
+        <input type="file" accept=".html,.htm" class="hidden" onchange="uploadPageFromEmpty(this)">
+      </label>
+    </div>
 
   </main>
 
-  <!-- Toast -->
-  <div id="toast" class="toast"></div>
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-backdrop" onclick="closeSettings()"></div>
+    <div class="modal-content bg-card rounded-2xl p-6 m-4" style="border: 1px solid var(--border);">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-semibold" id="settings-title">Réglages</h2>
+          <p class="text-muted text-sm" id="settings-filename"></p>
+        </div>
+        <button onclick="closeSettings()" class="p-2 rounded-lg hover:bg-input transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
 
-  <script>
-    const PUBLIC_URL = 'https://discovery-service.vercel.app';
+      <!-- Link Section -->
+      <section class="mb-6 p-4 bg-input rounded-xl">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 mr-4">
+            <p class="text-muted text-sm mb-1">Lien public</p>
+            <p class="font-medium truncate" id="settings-link"></p>
+          </div>
+          <button onclick="copyCurrentLink()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition">
+            Copier
+          </button>
+        </div>
+      </section>
 
-    // Font options
-    const FONTS = {
-      outfit: '"Outfit", sans-serif',
-      system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    };
-    let selectedFont = 'outfit';
+      <!-- Font Selector (only for main page) -->
+      <section id="font-section" class="mb-6">
+        <h3 class="font-medium mb-3">Police du contenu</h3>
+        <p class="text-muted text-sm mb-4">Le titre "DISCOVERY SERVICE" garde toujours Outfit</p>
+        <div class="flex gap-3">
+          <button onclick="selectFont('outfit')" id="font-outfit"
+                  class="flex-1 p-4 bg-input rounded-xl transition border-2" style="border-color: var(--border);">
+            <p class="font-medium mb-1" style="font-family: 'Outfit', sans-serif;">Outfit</p>
+            <p class="text-muted text-sm" style="font-family: 'Outfit', sans-serif;">Aa Bb Cc 123</p>
+          </button>
+          <button onclick="selectFont('system')" id="font-system"
+                  class="flex-1 p-4 bg-input rounded-xl transition border-2" style="border-color: var(--border);">
+            <p class="font-medium mb-1" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">System</p>
+            <p class="text-muted text-sm" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">Aa Bb Cc 123</p>
+          </button>
+        </div>
+      </section>
 
-    function selectFont(font) {
-      selectedFont = font;
-      // Update UI
-      document.getElementById('font-outfit').classList.toggle('border-blue-500', font === 'outfit');
-      document.getElementById('font-outfit').classList.toggle('border-zinc-700', font !== 'outfit');
-      document.getElementById('font-system').classList.toggle('border-blue-500', font === 'system');
-      document.getElementById('font-system').classList.toggle('border-zinc-700', font !== 'system');
+      <!-- Pricing Editor (only for main page) -->
+      <section id="pricing-section" class="space-y-4">
+        <h3 class="font-medium">Modifier les prix</h3>
+
+        <!-- Offer 01 -->
+        <div class="bg-input rounded-xl p-4">
+          <p class="text-muted text-xs uppercase tracking-wider mb-3">Offer 01 — Weekly Service</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
+              <span class="text-sm">1st Slide</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-1st" value="90" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
+              <span class="text-sm">2nd Slide</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-2nd" value="75" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
+              <span class="text-sm">3rd Slide</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-3rd" value="60" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-card rounded-lg">
+              <span class="text-sm">4th+ Slide</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-4th" value="50" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-card rounded-lg col-span-2">
+              <span class="text-sm">Specific Post</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-specific" value="150" class="w-16 bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offer 02 -->
+        <div class="bg-input rounded-xl p-4">
+          <p class="text-muted text-xs uppercase tracking-wider mb-3">Offer 02 — Spotify Growth</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="flex flex-col p-3 bg-card rounded-lg">
+              <span class="text-sm mb-2">10-20k</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-spotify-starter" value="590" class="w-full bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+            <div class="flex flex-col p-3 bg-card rounded-lg">
+              <span class="text-sm mb-2">25-45k</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-spotify-growth" value="990" class="w-full bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+            <div class="flex flex-col p-3 bg-card rounded-lg">
+              <span class="text-sm mb-2">45k+</span>
+              <div class="flex items-center gap-1">
+                <span class="text-muted">€</span>
+                <input type="number" id="price-spotify-platinum" value="1590" class="w-full bg-input rounded px-2 py-1 text-right font-semibold">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Save Button -->
+      <div class="mt-6 flex justify-end">
+        <button onclick="saveSettings()" id="save-btn"
+                class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-medium transition">
+          Sauvegarder
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+  const PUBLIC_URL = 'https://discovery-service.vercel.app';
+  const GALLERY_STORAGE_KEY = 'discovery-gallery-pages';
+  const THEME_KEY = 'discovery-theme';
+
+  // Theme
+  let currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
+  applyTheme(currentTheme);
+
+  function applyTheme(theme) {
+    const app = document.getElementById('app');
+    app.classList.remove('dark', 'light');
+    app.classList.add(theme);
+    document.getElementById('icon-sun').classList.toggle('hidden', theme === 'dark');
+    document.getElementById('icon-moon').classList.toggle('hidden', theme === 'light');
+    localStorage.setItem(THEME_KEY, theme);
+    currentTheme = theme;
+  }
+
+  function toggleTheme() {
+    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  }
+
+  // Gallery
+  let galleryPages = JSON.parse(localStorage.getItem(GALLERY_STORAGE_KEY) || '[]');
+  let currentEditPage = null;
+  let originalHtml = '';
+
+  if (galleryPages.length === 0) {
+    galleryPages = [{ name: 'Discovery Service', filename: 'index.html', isMain: true }];
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
+  }
+
+  function renderGallery() {
+    const grid = document.getElementById('pages-grid');
+    const empty = document.getElementById('empty-state');
+
+    if (galleryPages.length === 0) {
+      grid.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
     }
 
-    function detectCurrentFont(html) {
-      if (html.includes('font-family: -apple-system') || html.includes('font-family: "Segoe UI"')) {
-        return 'system';
-      }
-      return 'outfit';
+    grid.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    grid.innerHTML = galleryPages.map((page, index) => `
+      <div class="bg-card rounded-xl overflow-hidden group" style="border: 1px solid var(--border);">
+        <div class="h-40 bg-white relative cursor-pointer" onclick="openSettings(${index})">
+          <iframe src="/${page.filename}" class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+            <span class="opacity-0 group-hover:opacity-100 bg-white text-black px-3 py-1.5 rounded-lg text-sm font-medium transition">
+              Réglages
+            </span>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="min-w-0">
+              <p class="font-medium truncate">${page.name}</p>
+              <p class="text-muted text-xs truncate">${page.filename}</p>
+            </div>
+            ${page.isMain ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded shrink-0 ml-2">Principal</span>' : ''}
+          </div>
+          <div class="flex gap-2">
+            <button onclick="copyPageLink('${page.filename}')"
+                    class="flex-1 px-3 py-2 bg-input rounded-lg text-sm hover:opacity-80 transition">
+              Copier le lien
+            </button>
+            <a href="/${page.filename}" target="_blank"
+               class="px-3 py-2 bg-input rounded-lg text-sm hover:opacity-80 transition flex items-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+            ${!page.isMain ? `
+            <button onclick="event.stopPropagation(); deletePage(${index})"
+                    class="px-3 py-2 bg-input hover:bg-red-600 hover:text-white rounded-lg text-sm transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Settings Modal
+  async function openSettings(index) {
+    currentEditPage = galleryPages[index];
+    const modal = document.getElementById('settings-modal');
+    const isMain = currentEditPage.isMain;
+
+    document.getElementById('settings-title').textContent = currentEditPage.name;
+    document.getElementById('settings-filename').textContent = currentEditPage.filename;
+    document.getElementById('settings-link').textContent = `${PUBLIC_URL}/${currentEditPage.filename === 'index.html' ? '' : currentEditPage.filename}`;
+
+    // Show/hide sections based on page type
+    document.getElementById('font-section').style.display = isMain ? 'block' : 'none';
+    document.getElementById('pricing-section').style.display = isMain ? 'block' : 'none';
+
+    if (isMain) {
+      await loadMainPageData();
     }
 
-    // Price mapping to HTML content
-    const priceMap = {
-      'price-1st': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€90<\/span>/, label: '€90' },
-      'price-2nd': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€75<\/span>/, label: '€75' },
-      'price-3rd': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€60<\/span>/, label: '€60' },
-      'price-4th': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€50<\/span>/, label: '€50' },
-      'price-specific': { search: /<span class="text-4xl font-semibold tracking-tight leading-none">€150<\/span>/, label: '€150' },
-      'price-spotify-starter': { search: /<span class="text-5xl font-semibold tracking-tighter leading-none">€590<\/span>/, label: '€590' },
-      'price-spotify-growth': { search: /<span class="text-5xl font-semibold tracking-tighter leading-none">€990<\/span>/, label: '€990' },
-      'price-spotify-platinum': { search: /<span class="text-5xl font-semibold tracking-tighter leading-none">€1,590<\/span>/, label: '€1,590' },
-    };
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 
-    let originalHtml = '';
+  function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('active');
+    document.body.style.overflow = '';
+    currentEditPage = null;
+  }
 
-    // Load current HTML on page load
-    async function loadCurrentHtml() {
-      try {
-        const res = await fetch('/index.html');
-        originalHtml = await res.text();
+  function copyCurrentLink() {
+    const link = document.getElementById('settings-link').textContent;
+    navigator.clipboard.writeText(link);
+    showToast('Lien copié !');
+  }
 
-        // Extract current prices and update inputs
-        extractPrices(originalHtml);
+  // Font
+  const FONTS = {
+    outfit: '"Outfit", sans-serif',
+    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  };
+  let selectedFont = 'outfit';
 
-        // Detect current font and update selector
-        selectedFont = detectCurrentFont(originalHtml);
-        selectFont(selectedFont);
-      } catch (e) {
-        console.error('Failed to load HTML:', e);
-      }
-    }
+  function selectFont(font) {
+    selectedFont = font;
+    document.getElementById('font-outfit').style.borderColor = font === 'outfit' ? '#3b82f6' : 'var(--border)';
+    document.getElementById('font-system').style.borderColor = font === 'system' ? '#3b82f6' : 'var(--border)';
+  }
 
-    function extractPrices(html) {
-      // Extract prices using regex
+  async function loadMainPageData() {
+    try {
+      const res = await fetch('/index.html');
+      originalHtml = await res.text();
+
+      // Extract prices
       const patterns = [
         { id: 'price-1st', regex: /Elite Spot[\s\S]*?€(\d+)/ },
         { id: 'price-2nd', regex: /Prime Spot[\s\S]*?€(\d+)/ },
@@ -292,42 +382,31 @@
       ];
 
       patterns.forEach(({ id, regex }) => {
-        const match = html.match(regex);
+        const match = originalHtml.match(regex);
         if (match) {
-          const value = match[1].replace(',', '');
-          document.getElementById(id).value = value;
+          document.getElementById(id).value = match[1].replace(',', '');
         }
       });
+
+      // Detect font
+      selectedFont = originalHtml.includes('font-family: -apple-system') ? 'system' : 'outfit';
+      selectFont(selectedFont);
+    } catch (e) {
+      console.error('Failed to load:', e);
     }
+  }
 
-    function formatPrice(value) {
-      const num = parseInt(value);
-      if (num >= 1000) {
-        return num.toLocaleString('en-US').replace(',', ',');
-      }
-      return num.toString();
-    }
+  async function saveSettings() {
+    if (!currentEditPage) return;
 
-    function showToast(message, type = 'success') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.className = `toast ${type} show`;
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sauvegarde...';
+    showToast('Mise à jour en cours...', 'loading');
 
-    function copyLink() {
-      navigator.clipboard.writeText(PUBLIC_URL);
-      showToast('Lien copié !');
-    }
-
-    async function savePrices() {
-      const btn = document.getElementById('save-btn');
-      btn.disabled = true;
-      btn.innerHTML = '<span>Sauvegarde...</span>';
-      showToast('Mise à jour en cours...', 'loading');
-
-      try {
-        // Get new prices
+    try {
+      if (currentEditPage.isMain) {
+        // Update prices and font
         const prices = {
           '1st': document.getElementById('price-1st').value,
           '2nd': document.getElementById('price-2nd').value,
@@ -339,206 +418,142 @@
           'spotify-platinum': document.getElementById('price-spotify-platinum').value,
         };
 
-        // Update HTML with new prices
         let newHtml = originalHtml;
 
-        // Update font (body only, not title-font)
-        newHtml = newHtml.replace(
-          /body\s*\{[\s\S]*?font-family:[^;]+;/,
-          `body {\n        font-family: ${FONTS[selectedFont]};`
-        );
+        // Update font
+        newHtml = newHtml.replace(/body\s*\{[\s\S]*?font-family:[^;]+;/, `body {\n        font-family: ${FONTS[selectedFont]};`);
 
-        // Offer 01 prices (text-4xl)
-        newHtml = newHtml.replace(
-          /(Elite Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
-          `$1€${prices['1st']}$2`
-        );
-        newHtml = newHtml.replace(
-          /(Prime Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
-          `$1€${prices['2nd']}$2`
-        );
-        newHtml = newHtml.replace(
-          /(Select Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
-          `$1€${prices['3rd']}$2`
-        );
-        newHtml = newHtml.replace(
-          /(Standard Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
-          `$1€${prices['4th']}$2`
-        );
-        newHtml = newHtml.replace(
-          /(Full Feature[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+([\s\S]*?<\/span>)/,
-          `$1€${prices['specific']}$2`
-        );
+        // Update prices
+        const priceReplacements = [
+          { pattern: /(Elite Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['1st'] },
+          { pattern: /(Prime Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['2nd'] },
+          { pattern: /(Select Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['3rd'] },
+          { pattern: /(Standard Spot[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['4th'] },
+          { pattern: /(Full Feature[\s\S]*?<span class="text-4xl font-semibold tracking-tight leading-none">)€\d+/, price: prices['specific'] },
+          { pattern: /(INITIAL[\s\S]*?MOMENTUM[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, price: formatPrice(prices['spotify-starter']) },
+          { pattern: /(ALGORITHM[\s\S]*?TRIGGER[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, price: formatPrice(prices['spotify-growth']) },
+          { pattern: /(FULL[\s\S]*?VELOCITY[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+/, price: formatPrice(prices['spotify-platinum']) },
+        ];
 
-        // Offer 02 prices (text-5xl) - with comma formatting for 1000+
-        newHtml = newHtml.replace(
-          /(INITIAL[\s\S]*?MOMENTUM[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+([\s\S]*?<\/span>)/,
-          `$1€${formatPrice(prices['spotify-starter'])}$2`
-        );
-        newHtml = newHtml.replace(
-          /(ALGORITHM[\s\S]*?TRIGGER[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+([\s\S]*?<\/span>)/,
-          `$1€${formatPrice(prices['spotify-growth'])}$2`
-        );
-        newHtml = newHtml.replace(
-          /(FULL[\s\S]*?VELOCITY[\s\S]*?<span class="text-5xl font-semibold tracking-tighter leading-none">)€[\d,]+([\s\S]*?<\/span>)/,
-          `$1€${formatPrice(prices['spotify-platinum'])}$2`
-        );
+        priceReplacements.forEach(({ pattern, price }) => {
+          newHtml = newHtml.replace(pattern, `$1€${price}`);
+        });
 
-        // Send to API
         const res = await fetch('/api/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             content: newHtml,
             filename: 'index.html',
-            message: `Update: font=${selectedFont}, prices: 1st=${prices['1st']}, 2nd=${prices['2nd']}, 3rd=${prices['3rd']}, 4th=${prices['4th']}, specific=${prices['specific']}, spotify=${prices['spotify-starter']}/${prices['spotify-growth']}/${prices['spotify-platinum']}`
+            message: `Update settings`
           })
         });
 
         const data = await res.json();
+        if (!data.success) throw new Error(data.error);
 
+        originalHtml = newHtml;
+      }
+
+      showToast('Sauvegardé ! En ligne dans ~10s', 'success');
+      closeSettings();
+      renderGallery();
+    } catch (e) {
+      showToast('Erreur: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sauvegarder';
+    }
+  }
+
+  function formatPrice(value) {
+    const num = parseInt(value);
+    return num >= 1000 ? num.toLocaleString('en-US') : num.toString();
+  }
+
+  // Gallery actions
+  function copyPageLink(filename) {
+    const url = `${PUBLIC_URL}/${filename === 'index.html' ? '' : filename}`;
+    navigator.clipboard.writeText(url);
+    showToast('Lien copié !');
+  }
+
+  async function uploadPage(file) {
+    const filename = file.name.toLowerCase().replace(/\s+/g, '-');
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      showToast('Upload en cours...', 'loading');
+      try {
+        const res = await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: e.target.result,
+            filename: filename,
+            message: `Add page: ${filename}`
+          })
+        });
+
+        const data = await res.json();
         if (data.success) {
-          originalHtml = newHtml;
-          showToast('Prix mis à jour ! En ligne dans ~10s', 'success');
-          document.getElementById('status').textContent = 'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
+          galleryPages.push({
+            name: file.name.replace(/\.(html|htm)$/i, ''),
+            filename: filename,
+            isMain: false
+          });
+          localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
+          renderGallery();
+          showToast('Page ajoutée !', 'success');
         } else {
-          throw new Error(data.error || 'Update failed');
+          throw new Error(data.error);
         }
       } catch (e) {
         showToast('Erreur: ' + e.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span>Sauvegarder</span>';
       }
+    };
+    reader.readAsText(file);
+  }
+
+  function uploadPageFromEmpty(input) {
+    if (input.files.length > 0) {
+      uploadPage(input.files[0]);
+      input.value = '';
     }
+  }
 
-    // ========== GALLERY ==========
-    const GALLERY_STORAGE_KEY = 'discovery-gallery-pages';
-    let galleryPages = JSON.parse(localStorage.getItem(GALLERY_STORAGE_KEY) || '[]');
+  function deletePage(index) {
+    if (galleryPages[index].isMain) return;
+    if (!confirm(`Supprimer "${galleryPages[index].name}" ?`)) return;
 
-    // Initialize with index.html if empty
-    if (galleryPages.length === 0) {
-      galleryPages = [
-        { name: 'Discovery Service', filename: 'index.html', isMain: true }
-      ];
-      localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
-    }
-
-    function renderGallery() {
-      const grid = document.getElementById('pages-grid');
-
-      grid.innerHTML = galleryPages.map((page, index) => `
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden group">
-          <div class="h-32 bg-white relative">
-            <iframe src="/${page.filename}"
-                    class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
-          </div>
-          <div class="p-4">
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <p class="font-medium truncate">${page.name}</p>
-                <p class="text-zinc-500 text-xs">${page.filename}</p>
-              </div>
-              ${page.isMain ? '<span class="text-xs bg-blue-600 px-2 py-1 rounded">Principal</span>' : ''}
-            </div>
-            <div class="flex gap-2">
-              <button onclick="copyPageLink('${page.filename}')"
-                      class="flex-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
-                Copier le lien
-              </button>
-              <a href="/${page.filename}" target="_blank"
-                 class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                </svg>
-              </a>
-              ${!page.isMain ? `
-              <button onclick="deletePage(${index})"
-                      class="px-3 py-2 bg-zinc-800 hover:bg-red-600 rounded-lg text-sm transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-              </button>
-              ` : ''}
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function copyPageLink(filename) {
-      const url = `${PUBLIC_URL}/${filename === 'index.html' ? '' : filename}`;
-      navigator.clipboard.writeText(url);
-      showToast('Lien copié !');
-    }
-
-    async function uploadPage(file) {
-      const filename = file.name.toLowerCase().replace(/\s+/g, '-');
-      const reader = new FileReader();
-
-      reader.onload = async (e) => {
-        const content = e.target.result;
-        showToast('Upload en cours...', 'loading');
-
-        try {
-          const res = await fetch('/api/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              content: content,
-              filename: filename,
-              message: `Add page: ${filename}`
-            })
-          });
-
-          const data = await res.json();
-
-          if (data.success) {
-            // Add to gallery
-            galleryPages.push({
-              name: file.name.replace('.html', '').replace('.htm', ''),
-              filename: filename,
-              isMain: false
-            });
-            localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
-            renderGallery();
-            showToast('Page ajoutée ! En ligne dans ~10s', 'success');
-          } else {
-            throw new Error(data.error);
-          }
-        } catch (e) {
-          showToast('Erreur: ' + e.message, 'error');
-        }
-      };
-
-      reader.readAsText(file);
-    }
-
-    async function deletePage(index) {
-      const page = galleryPages[index];
-      if (page.isMain) return;
-
-      if (!confirm(`Supprimer "${page.name}" ?`)) return;
-
-      // Note: On ne supprime pas le fichier sur GitHub, juste de la galerie locale
-      // Pour une vraie suppression, il faudrait une API delete
-      galleryPages.splice(index, 1);
-      localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
-      renderGallery();
-      showToast('Page retirée de la galerie');
-    }
-
-    // File input handler
-    document.getElementById('gallery-file-input').addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        uploadPage(e.target.files[0]);
-        e.target.value = '';
-      }
-    });
-
-    // Init
-    loadCurrentHtml();
+    galleryPages.splice(index, 1);
+    localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleryPages));
     renderGallery();
-  </script>
+    showToast('Page supprimée');
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // File input
+  document.getElementById('gallery-file-input').addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      uploadPage(e.target.files[0]);
+      e.target.value = '';
+    }
+  });
+
+  // Close modal on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSettings();
+  });
+
+  // Init
+  renderGallery();
+</script>
 </body>
 </html>
