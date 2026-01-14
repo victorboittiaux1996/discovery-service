@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #10b981; color: white; padding: 12px 20px;
+      border-radius: 8px; font-weight: 500; opacity: 0;
+      transform: translateY(10px); transition: all 0.3s;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body class="min-h-screen bg-zinc-950 text-white">
+
+  <!-- Header -->
+  <header class="border-b border-zinc-800 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-semibold">Preview Manager</h1>
+        <p class="text-zinc-500 text-sm">Gérez et partagez vos previews HTML</p>
+      </div>
+      <label class="bg-white text-black px-4 py-2 rounded-lg font-medium cursor-pointer hover:bg-zinc-200 transition">
+        + Ajouter HTML
+        <input type="file" id="file-input" accept=".html,.htm" multiple class="hidden">
+      </label>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto p-6">
+
+    <!-- Active Links Section -->
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-medium flex items-center gap-2">
+          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          Liens Actifs
+        </h2>
+        <button onclick="refreshLinks()" class="text-zinc-500 hover:text-white text-sm transition">
+          Rafraîchir
+        </button>
+      </div>
+      <div id="active-links" class="grid gap-3">
+        <div class="text-zinc-600 text-sm py-8 text-center border border-dashed border-zinc-800 rounded-xl">
+          Aucun lien actif. Ajoutez des fichiers HTML pour commencer.
+        </div>
+      </div>
+    </section>
+
+    <!-- All Previews -->
+    <section>
+      <h2 class="text-lg font-medium mb-4">Toutes les Previews</h2>
+      <div id="previews-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Cards will be inserted here -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">Lien copié !</div>
+
+  <script>
+    const STORAGE_KEY = 'preview-manager-items';
+    const BASE_URL = window.location.origin + window.location.pathname.replace('app.html', '');
+
+    let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    // Initialize with index.html if exists and not in storage
+    if (items.length === 0) {
+      items.push({
+        id: 'discovery-service',
+        name: 'Discovery Service',
+        filename: 'index.html',
+        date: new Date().toISOString(),
+        active: true
+      });
+      saveItems();
+    }
+
+    function saveItems() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function showToast(message = 'Lien copié !') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => showToast());
+    }
+
+    function getPreviewUrl(filename) {
+      return BASE_URL + filename;
+    }
+
+    function toggleActive(id) {
+      const item = items.find(i => i.id === id);
+      if (item) {
+        item.active = !item.active;
+        saveItems();
+        render();
+      }
+    }
+
+    function deleteItem(id) {
+      if (confirm('Supprimer cette preview ?')) {
+        items = items.filter(i => i.id !== id);
+        saveItems();
+        render();
+      }
+    }
+
+    function refreshLinks() {
+      showToast('Liens rafraîchis !');
+      render();
+    }
+
+    function formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function render() {
+      const activeLinks = document.getElementById('active-links');
+      const previewsGrid = document.getElementById('previews-grid');
+
+      const activeItems = items.filter(i => i.active);
+
+      // Render active links
+      if (activeItems.length === 0) {
+        activeLinks.innerHTML = `
+          <div class="text-zinc-600 text-sm py-8 text-center border border-dashed border-zinc-800 rounded-xl">
+            Aucun lien actif. Activez des previews ci-dessous.
+          </div>
+        `;
+      } else {
+        activeLinks.innerHTML = activeItems.map(item => `
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium truncate">${item.name}</h3>
+              <p class="text-zinc-500 text-sm truncate">${getPreviewUrl(item.filename)}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="${getPreviewUrl(item.filename)}" target="_blank"
+                 class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
+                Ouvrir
+              </a>
+              <button onclick="copyToClipboard('${getPreviewUrl(item.filename)}')"
+                      class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition">
+                Copier
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Render all previews
+      if (items.length === 0) {
+        previewsGrid.innerHTML = `
+          <div class="col-span-full text-zinc-600 text-sm py-12 text-center border border-dashed border-zinc-800 rounded-xl">
+            Aucune preview. Glissez des fichiers HTML ou cliquez sur "Ajouter HTML".
+          </div>
+        `;
+      } else {
+        previewsGrid.innerHTML = items.map(item => `
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden group">
+            <div class="h-40 bg-white relative">
+              <iframe src="${getPreviewUrl(item.filename)}"
+                      class="w-[400%] h-[400%] origin-top-left scale-[0.25] pointer-events-none"></iframe>
+              <a href="${getPreviewUrl(item.filename)}" target="_blank"
+                 class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                <span class="bg-white text-black px-4 py-2 rounded-lg font-medium">Ouvrir</span>
+              </a>
+            </div>
+            <div class="p-4">
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div class="min-w-0">
+                  <h3 class="font-medium truncate">${item.name}</h3>
+                  <p class="text-zinc-500 text-xs">${formatDate(item.date)}</p>
+                </div>
+                <button onclick="toggleActive('${item.id}')"
+                        class="shrink-0 w-10 h-6 rounded-full transition ${item.active ? 'bg-green-600' : 'bg-zinc-700'}">
+                  <span class="block w-4 h-4 bg-white rounded-full transition transform ${item.active ? 'translate-x-5' : 'translate-x-1'}"></span>
+                </button>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="copyToClipboard('${getPreviewUrl(item.filename)}')"
+                        class="flex-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
+                  Copier le lien
+                </button>
+                <button onclick="deleteItem('${item.id}')"
+                        class="px-3 py-2 bg-zinc-800 hover:bg-red-600 rounded-lg text-sm transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // File upload handler
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const id = 'preview-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          const filename = file.name.replace(/\s+/g, '-').toLowerCase();
+
+          // Store in localStorage with content (for GitHub Pages we'd need actual file upload)
+          items.unshift({
+            id,
+            name: file.name.replace('.html', '').replace('.htm', ''),
+            filename: filename,
+            content: event.target.result,
+            date: new Date().toISOString(),
+            active: true
+          });
+          saveItems();
+          render();
+          showToast('Preview ajoutée !');
+        };
+        reader.readAsText(file);
+      });
+      e.target.value = '';
+    });
+
+    // Drag and drop
+    document.body.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.body.classList.add('bg-zinc-900');
+    });
+
+    document.body.addEventListener('dragleave', () => {
+      document.body.classList.remove('bg-zinc-900');
+    });
+
+    document.body.addEventListener('drop', (e) => {
+      e.preventDefault();
+      document.body.classList.remove('bg-zinc-900');
+      const files = Array.from(e.dataTransfer.files).filter(f =>
+        f.type === 'text/html' || f.name.endsWith('.html') || f.name.endsWith('.htm')
+      );
+      if (files.length) {
+        document.getElementById('file-input').files = e.dataTransfer.files;
+        document.getElementById('file-input').dispatchEvent(new Event('change'));
+      }
+    });
+
+    // Init
+    render();
+  </script>
+</body>
+</html>
